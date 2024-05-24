@@ -1,54 +1,50 @@
-# Arda Mavi
 import os
 from keras.models import Model
-from keras.optimizers import Adadelta
+from keras.optimizers import Adam
 from keras.layers import Input, Conv2D, Activation, MaxPooling2D, Flatten, Dense, Dropout
+from keras.callbacks import ModelCheckpoint
 
 def save_model(model):
-    if not os.path.exists('Data/Model/'):
-        os.makedirs('Data/Model/')
-    model_json = model.to_json()
-    with open("Data/Model/model.json", "w") as model_file:
-        model_file.write(model_json)
-    # serialize weights to HDF5
-    model.save_weights("Data/Model/weights.h5")
-    print('Model and weights saved')
-    return
-
+    model_dir = "Data/Model/"
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+    
+    model_path = os.path.join(model_dir, "model.h5")
+    model.save(model_path)
+    print('Model saved to', model_path)
 
 def get_model():
     inputs = Input(shape=(150, 150, 3))
 
-    conv_1 = Conv2D(32, (3,3), strides=(1,1))(inputs)
-    act_1 = Activation('relu')(conv_1)
+    x = Conv2D(32, (3, 3), activation='relu')(inputs)
+    x = Conv2D(64, (3, 3), activation='relu')(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
 
-    conv_2 = Conv2D(64, (3,3), strides=(1,1))(act_1)
-    act_2 = Activation('relu')(conv_2)
+    x = Conv2D(64, (3, 3), activation='relu')(x)
+    x = Conv2D(128, (3, 3), activation='relu')(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
 
-    conv_3 = Conv2D(64, (3,3), strides=(1,1))(act_2)
-    act_3 = Activation('relu')(conv_3)
-
-    pooling_1 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(act_3)
-
-    conv_4 = Conv2D(128, (3,3), strides=(1,1))(pooling_1)
-    act_4 = Activation('relu')(conv_4)
-
-    pooling_2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(act_4)
-
-    flat_1 = Flatten()(pooling_2)
-
-    fc = Dense(1280)(flat_1)
-    fc = Activation('relu')(fc)
-    fc = Dropout(0.5)(fc)
-    fc = Dense(4)(fc)
-
-    outputs = Activation('sigmoid')(fc)
+    x = Flatten()(x)
+    x = Dense(128, activation='relu')(x)
+    x = Dropout(0.5)(x)
+    outputs = Dense(4, activation='softmax')(x)
 
     model = Model(inputs=inputs, outputs=outputs)
 
-    model.compile(loss='categorical_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    optimizer = Adam(lr=0.001)  # Verwendung von Adam-Optimizer mit Lernrate 0.001
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
     return model
 
 if __name__ == '__main__':
-    save_model(get_model())
+    model = get_model()
+    
+    # Speichern des besten Modells während des Trainings
+    checkpoint_path = "Data/Model/best_model.h5"
+    checkpoint = ModelCheckpoint(checkpoint_path, monitor='val_accuracy', verbose=1, save_best_only=True, mode='max')
+    
+    # Trainieren des Modells
+    # Hier sollte der Code zur Bereitstellung von Trainingsdaten und zum Aufrufen von model.fit() eingefügt werden
+    
+    # Speichern des endgültigen Modells
+    save_model(model)
