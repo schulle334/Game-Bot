@@ -1,0 +1,14 @@
+# Erstellen der Conda-Umgebung mit Python 3.8
+conda create -n game-ai python=3.8 -y
+
+# Aktivieren der Conda-Umgebung
+conda activate game-ai
+
+# Installieren der benötigten Bibliotheken
+conda install -c conda-forge opencv pyautogui pynput tensorflow -y
+
+# Überprüfen der Python-Version
+python --version
+
+# Hinweis zur Aktivierung der Umgebung beim Starten eines neuen Terminals
+echo "Um die Umgebung zu aktivieren, verwenden Sie: conda activate game-ai"
